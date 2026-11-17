@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { MENU, getVariant } from '@/lib/menu';
+import { useEffect, useRef, useState } from 'react';import { MENU, getVariant } from '@/lib/menu';
 import { site } from '@/lib/site';
 import { gsap, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { scrollToSection } from '@/lib/lenis';
@@ -16,7 +15,7 @@ export function Hero() {
   /** Sumber tunggal untuk exploded view di canvas. */
   const progressRef = useRef(0);
   const [exploded, setExploded] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(true);
 
   const variantKey = useUIStore((state) => state.variant);
   const setVariant = useUIStore((state) => state.setVariant);
@@ -24,11 +23,15 @@ export function Hero() {
   const variant = getVariant(variantKey);
 
   useEffect(() => {
-    const query = window.matchMedia('(min-width: 1024px)');
-    const update = () => setIsDesktop(query.matches);
-    update();
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
+    // Hentikan render loop WebGL saat hero tidak terlihat (mis. sedang di menu).
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroVisible(entry.isIntersecting),
+      { rootMargin: '200px 0px' },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
   }, []);
 
   useGSAP(
@@ -127,9 +130,9 @@ export function Hero() {
             progressRef={progressRef}
             channel="hero"
             autoRotate
-            labels={isDesktop}
+            labels
             particles
-            paused={activeItem !== null}
+            paused={activeItem !== null || !heroVisible}
           />
         </div>
 
@@ -224,7 +227,7 @@ export function Hero() {
         {/*  Pilihan varian — bar horizontal (mobile)                    */}
         {/* ------------------------------------------------------------ */}
         <div className="absolute inset-x-0 top-[63%] z-20 lg:hidden">
-          <div className="no-scrollbar flex gap-2 overflow-x-auto px-[var(--gutter)] pb-1">
+          <div className="no-scrollbar edge-fade-x flex gap-2 overflow-x-auto px-[var(--gutter)] pb-1">
             {MENU.map((item) => {
               const active = item.key === variantKey;
               return (
@@ -234,7 +237,7 @@ export function Hero() {
                   onClick={() => setVariant(item.key)}
                   aria-pressed={active}
                   className={cn(
-                    'flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-[11px] transition-colors',
+                    'flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-[11px] transition-colors',
                     active
                       ? 'border-cream/25 bg-cream/10 text-cream'
                       : 'border-white/[0.08] bg-ink/40 text-cream/50',
@@ -309,7 +312,7 @@ export function Hero() {
             aria-pressed={exploded}
             aria-label={exploded ? 'Satukan lapisan' : 'Bongkar lapisan'}
             className={cn(
-              'grid h-10 w-10 place-items-center rounded-full border backdrop-blur',
+              'grid h-11 w-11 place-items-center rounded-full border backdrop-blur',
               exploded
                 ? 'border-cheese/50 bg-cheese/20 text-cream'
                 : 'border-white/10 bg-ink/50 text-cream/60',

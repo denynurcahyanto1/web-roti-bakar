@@ -160,6 +160,29 @@
     scrollbar-width: none;
   }
 
+  /*
+   * Baris pil yang bisa digeser: tepi kanan dilembutkan supaya terbaca
+   * "masih ada pilihan lain", bukan terpotong mentah di tepi layar.
+   * Hanya sisi kanan yang dipudarkan agar pil pertama tetap utuh.
+   */
+  .edge-fade-x {
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 30px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 30px), transparent 100%);
+  }
+
+  /* Varian untuk baris yang berubah jadi flex-wrap di layar lebar. */
+  @media (max-width: 767px) {
+    .edge-fade-x-mobile {
+      mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 30px), transparent 100%);
+      -webkit-mask-image: linear-gradient(
+        to right,
+        #000 0,
+        #000 calc(100% - 30px),
+        transparent 100%
+      );
+    }
+  }
+
   .text-gradient-warm {
     background: linear-gradient(100deg, #fff3dc 0%, #f5e6c8 35%, #e8a87c 72%, #d9b478 100%);
     -webkit-background-clip: text;
@@ -171,6 +194,19 @@
   .canvas-layer canvas {
     touch-action: none;
     outline: none;
+  }
+
+  /*
+   * Di layar sentuh, gestur vertikal di atas canvas dipakai untuk scroll
+   * halaman; rotasi tetap jalan untuk geser horizontal dan pinch. Tanpa ini
+   * canvas menelan seluruh swipe dan halaman terasa "macet" di hero.
+   */
+  @media (pointer: coarse) {
+    .toast-canvas,
+    .toast-canvas > div,
+    .toast-canvas canvas {
+      touch-action: pan-y !important;
+    }
   }
 
   .section-pad {

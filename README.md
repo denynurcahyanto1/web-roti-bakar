@@ -34,9 +34,10 @@ Semua teks bisnis terpusat di dua file:
 
 Ganti sebelum go-live:
 
-- `WA_NUMBER` di `lib/site.ts` — saat ini `6281234567890`.
+- `WA_NUMBER` di `lib/site.ts` — saat ini `6281234567890` (nomor dummy, jangan dipakai produksi).
 - `instagram.handle` / `instagram.link` — masih `@rotibakarhersha`.
 - `gofood.link` — masih halaman utama GoFood.
+- `site.url` — masih `https://rotibakarhersha.com`. Domain ini dipakai canonical, OG image, sitemap, robots, dan JSON-LD; ganti setelah domain final dibeli/dikonfirmasi.
 - **Outlet 2 & 3** (`karanganyar-kota`, `solo`) — masih placeholder level area, bukan alamat pasti. Lihat bagian berikut.
 
 ## Multi-outlet
@@ -59,6 +60,13 @@ export const outlets: readonly Outlet[] = [
 - Jam buka memakai format `"16.00"` / `"24.00"`. Status buka/tutup dihitung otomatis di `lib/hours.ts` (mendukung jam lewat tengah malam).
 
 Pemilih outlet ada di section **Lokasi**; peta dan kartu alamat ikut berganti tanpa reload.
+
+## SEO & share
+
+- `app/layout.tsx` mengisi metadata, canonical, Open Graph/Twitter, dan JSON-LD `Restaurant` (alamat, geo, jam buka).
+- Gambar share ada di `public/og.png` (1200×630). Ganti file ini kalau logo/foto produk resmi sudah siap — tidak perlu mengubah kode.
+- `app/sitemap.ts` dan `app/robots.ts` membuat `/sitemap.xml` dan `/robots.txt` dari `site.url`.
+- Header security (`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`) diatur di `next.config.mjs`.
 
 ## Logo
 
@@ -111,7 +119,11 @@ Tanpa variabel itu, model prosedural yang dipakai.
 app/
   layout.tsx        metadata, font, JSON-LD, Header/Footer
   page.tsx          susunan section
+  sitemap.ts        /sitemap.xml
+  robots.ts         /robots.txt
   globals.css       token desain, grain, custom cursor
+public/
+  og.png            gambar share 1200×630
 components/
   layout/           Header (nav + overlay mobile), Footer
   sections/         Hero, MenuSection, MenuModal, StorySection, LocationSection
@@ -130,11 +142,13 @@ store/
 
 ## Catatan performa & aksesibilitas
 
-- Canvas 3D hanya aktif saat terlihat; `frameloop` dihentikan ketika modal/overlay terbuka.
+- Canvas 3D hanya aktif saat hero terlihat; `frameloop` dihentikan ketika modal terbuka atau hero keluar viewport.
+- Kalau WebGL tidak tersedia atau gagal dibuat, canvas diganti fallback statis — halaman tidak blank/crash.
 - Peta Google di-lazy-load lewat `IntersectionObserver` dan baru fade-in setelah tile siap (tidak ada kilatan putih).
 - Preferensi `prefers-reduced-motion` dihormati oleh animasi GSAP dan smooth scroll.
-- Fokus keyboard terlihat, ada skip-link, tombol punya label, dan canvas tetap bisa dipakai tanpa drag (tombol zoom/explode tersedia).
-- `prefers-reduced-motion` + layar kecil: UI disederhanakan, tapi model tetap bisa digeser.
+- Modal menu menjebak fokus (`Tab`/`Shift+Tab`), menonaktifkan halaman di belakangnya (`inert`), menutup dengan `Escape`, dan mengembalikan fokus ke kartu asal.
+- Overlay menu mobile juga `inert` saat tertutup, jadi tidak bisa di-tab dalam keadaan tak terlihat.
+- Status buka/tutup di header dan section lokasi dihitung dari jam outlet dan diperbarui tiap menit.
 
 ## Deadline konten
 

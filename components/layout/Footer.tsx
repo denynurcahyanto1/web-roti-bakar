@@ -1,6 +1,7 @@
 'use client';
 
 import { site } from '@/lib/site';
+import { getServiceWindow } from '@/lib/hours';
 import { scrollToSection, scrollToTop } from '@/lib/lenis';
 import { MagneticButton } from '@/components/ui/MagneticButton';
 import { Reveal } from '@/components/ui/Reveal';
@@ -14,6 +15,7 @@ const NAV = [
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const serviceWindow = getServiceWindow(site.hours);
 
   return (
     <footer className="relative overflow-hidden border-t border-white/[0.06]">
@@ -46,7 +48,9 @@ export function Footer() {
               </MagneticButton>
             </div>
             <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-cream/30 sm:text-right">
-              Dikirim 16.00 — 23.00 · {site.city}
+              {serviceWindow
+                ? `Dikirim ${serviceWindow.open} — ${serviceWindow.close} · ${site.city}`
+                : `Dikirim di ${site.city}`}
             </p>
           </Reveal>
         </div>
@@ -79,7 +83,7 @@ export function Footer() {
                 key={item.id}
                 type="button"
                 onClick={() => scrollToSection(item.id)}
-                className="text-left text-[13px] text-cream-dim/60 transition-colors hover:text-cream"
+                className="inline-flex min-h-11 items-center text-left text-[13px] text-cream-dim/60 transition-colors hover:text-cream sm:min-h-0"
               >
                 {item.label}
               </button>
@@ -91,7 +95,7 @@ export function Footer() {
               href={site.whatsapp.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] text-cream-dim/60 transition-colors hover:text-cream"
+              className="inline-flex min-h-11 items-center text-[13px] text-cream-dim/60 transition-colors hover:text-cream sm:min-h-0"
             >
               {site.whatsapp.display}
             </a>
@@ -99,7 +103,7 @@ export function Footer() {
               href={site.instagram.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] text-cream-dim/60 transition-colors hover:text-cream"
+              className="inline-flex min-h-11 items-center text-[13px] text-cream-dim/60 transition-colors hover:text-cream sm:min-h-0"
             >
               {site.instagram.handle}
             </a>
@@ -107,7 +111,7 @@ export function Footer() {
               href={site.gofood.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] text-cream-dim/60 transition-colors hover:text-cream"
+              className="inline-flex min-h-11 items-center text-[13px] text-cream-dim/60 transition-colors hover:text-cream sm:min-h-0"
             >
               GoFood
             </a>
@@ -125,7 +129,7 @@ export function Footer() {
               href={site.maps.directions}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[12px] text-cheese/70 transition-colors hover:text-cheese"
+              className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-cheese/70 transition-colors hover:text-cheese sm:min-h-0"
             >
               Lihat rute
               <ArrowUpRight />
@@ -141,7 +145,7 @@ export function Footer() {
             type="button"
             onClick={scrollToTop}
             data-cursor="hover"
-            className="group inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cream/35 transition-colors hover:text-cream"
+            className="group inline-flex min-h-11 items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cream/35 transition-colors hover:text-cream"
           >
             Kembali ke atas
             <span className="transition-transform duration-300 group-hover:-translate-y-0.5">
@@ -186,7 +190,7 @@ function SocialLink({
       rel="noopener noreferrer"
       aria-label={label}
       data-cursor="hover"
-      className="grid h-9 w-9 place-items-center rounded-full border border-white/[0.08] text-cream/50 transition-colors hover:border-cheese/35 hover:text-cream"
+      className="grid h-11 w-11 place-items-center rounded-full border border-white/[0.08] text-cream/50 transition-colors hover:border-cheese/35 hover:text-cream md:h-9 md:w-9"
     >
       {children}
     </a>

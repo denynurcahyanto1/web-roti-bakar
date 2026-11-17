@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { site } from '@/lib/site';
+import { getOpeningState } from '@/lib/hours';
 import { lockScroll, scrollToSection, scrollToTop, unlockScroll } from '@/lib/lenis';
 import { cn } from '@/lib/utils';
 import { MagneticButton } from '@/components/ui/MagneticButton';
@@ -16,6 +17,15 @@ const LINKS = [
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // null sampai efek pertama jalan, supaya tidak ada teks status yang salah saat SSR.
+  const [openNow, setOpenNow] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const update = () => setOpenNow(getOpeningState(site.hours) === 'open');
+    update();
+    const timer = window.setInterval(update, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -25,9 +35,31 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    if (open) lockScroll();
-    else unlockScroll();
-    return () => unlockScroll();
+    if (!open) {
+      unlockScroll();
+      return;
+    }
+
+    lockScroll();
+
+    // Halaman di belakang overlay tidak boleh ikut ter-tab atau terbaca.
+    const regions = [document.getElementById('main'), document.querySelector('footer')].filter(
+      (node): node is HTMLElement => node instanceof HTMLElement,
+    );
+    const alreadyInert = new Map(regions.map((node) => [node, node.hasAttribute('inert')]));
+    regions.forEach((node) => node.setAttribute('inert', ''));
+
+    const focusTimer = window.setTimeout(() => {
+      document.querySelector<HTMLElement>('#mobile-nav button')?.focus();
+    }, 140);
+
+    return () => {
+      window.clearTimeout(focusTimer);
+      regions.forEach((node) => {
+        if (!alreadyInert.get(node)) node.removeAttribute('inert');
+      });
+      unlockScroll();
+    };
   }, [open]);
 
   useEffect(() => {
@@ -59,8 +91,8 @@ export function Header() {
             type="button"
             onClick={scrollToTop}
             data-cursor="hover"
-            className="group flex items-center gap-3 text-left"
-            aria-label="Kembali ke atas"
+            className="group flex min-h-11 items-center gap-3 text-left"
+            aria-label={`${site.name} — kembali ke atas`}
           >
             <span className="relative grid h-9 w-9 place-items-center rounded-xl border border-cream/15 bg-cream/[0.04] transition-colors group-hover:border-cheese/40">
               <ToastMark className="h-5 w-5" />
@@ -90,8 +122,21 @@ export function Header() {
               data-cursor="hover"
               className="hidden items-center gap-2 text-[12px] font-medium text-cream/70 transition-colors hover:text-cream lg:flex"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" />
-              Buka sekarang
+              <span
+                className={cn(
+                  'h-1.5 w-1.5 rounded-full transition-colors',
+                  openNow === true
+                    ? 'bg-emerald-400/80'
+                    : openNow === false
+                      ? 'bg-cheese/60'
+                      : 'bg-cream/25',
+                )}
+              />
+              {openNow === true
+                ? 'Buka sekarang'
+                : openNow === false
+                  ? 'Sedang tutup'
+                  : 'Jam buka'}
             </a>
 
             <MagneticButton
@@ -108,7 +153,7 @@ export function Header() {
               onClick={() => setOpen((value) => !value)}
               aria-expanded={open}
               aria-label={open ? 'Tutup menu' : 'Buka menu'}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-cream md:hidden"
+              className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-cream md:hidden"
             >
               <span className="relative block h-3 w-4">
                 <span
@@ -142,9 +187,10 @@ export function Header() {
           open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
         )}
         aria-hidden={!open}
+        inert={!open}
       >
         <div className="flex h-full flex-col justify-between px-[var(--gutter)] pb-10 pt-[calc(var(--nav-h)+3rem)]">
-          <nav className="flex flex-col gap-2">
+          <nav id="mobile-nav" className="flex flex-col gap-2">
             {LINKS.map((link, index) => (
               <button
                 key={link.id}

@@ -38,7 +38,7 @@ export function LayerTag({ index, label, position, visualRef, order = 0 }: Layer
     <Html position={position} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
       <div
         ref={elementRef}
-        className="flex select-none items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-ink/75 py-1.5 pl-2.5 pr-3 opacity-0 will-change-transform"
+        className="hidden select-none items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-ink/75 py-1.5 pl-2.5 pr-3 opacity-0 will-change-transform md:flex"
         style={{ opacity: 0 }}
       >
         <span className="font-body text-[9px] tabular-nums tracking-[0.18em] text-cheese/80">

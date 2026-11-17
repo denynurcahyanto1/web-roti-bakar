@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MENU, getVariant, type ToppingKind } from '@/lib/menu';
 import { site } from '@/lib/site';
 import { cn, formatIDR } from '@/lib/utils';
@@ -48,18 +49,63 @@ export function MenuModal() {
     return () => {
       window.cancelAnimationFrame(raf);
       unlockScroll();
-      previouslyFocused.current?.focus?.();
+      // Fokus dikembalikan setelah cleanup lain melepas atribut inert.
+      const target = previouslyFocused.current;
+      window.requestAnimationFrame(() => target?.focus?.());
     };
   }, [activeItem]);
 
-  // Tutup dengan Escape.
+  // Tutup dengan Escape + jebak fokus di dalam dialog. Latar dibuat inert
+  // supaya keyboard dan screen reader tidak bisa "kabur" ke halaman di belakang.
   useEffect(() => {
     if (!activeItem) return;
+
+    const panel = panelRef.current;
+    const regions = [
+      document.getElementById('main'),
+      document.querySelector('header'),
+      document.querySelector('footer'),
+    ].filter((node): node is HTMLElement => node instanceof HTMLElement);
+
+    const alreadyInert = new Map(regions.map((node) => [node, node.hasAttribute('inert')]));
+    regions.forEach((node) => node.setAttribute('inert', ''));
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeItem();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeItem();
+        return;
+      }
+      if (event.key !== 'Tab' || !panel) return;
+
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      const outside = !panel.contains(active);
+
+      if (!event.shiftKey && (active === last || outside)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && (active === first || outside)) {
+        event.preventDefault();
+        last.focus();
+      }
     };
+
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      regions.forEach((node) => {
+        if (!alreadyInert.get(node)) node.removeAttribute('inert');
+      });
+    };
   }, [activeItem, closeItem]);
 
   // Animasi masuk panel.
@@ -76,6 +122,7 @@ export function MenuModal() {
   }, [activeItem]);
 
   if (!activeItem) return null;
+  if (typeof document === 'undefined') return null;
 
   const toggleExplode = () => {
     const next = !exploded;
@@ -85,7 +132,7 @@ export function MenuModal() {
 
   const index = MENU.findIndex((item) => item.key === variant.key) + 1;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/80 p-3 backdrop-blur-xl md:p-6"
       role="dialog"
@@ -149,7 +196,7 @@ export function MenuModal() {
               onClick={() => toastControls.reset('modal')}
               aria-label="Reset tampilan 3D"
               data-cursor="hover"
-              className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-ink/50 text-cream/60 backdrop-blur transition-colors hover:text-cream"
+              className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-ink/50 text-cream/60 backdrop-blur transition-colors hover:text-cream"
             >
               <ResetIcon />
             </button>
@@ -171,7 +218,7 @@ export function MenuModal() {
               type="button"
               onClick={closeItem}
               aria-label="Tutup detail menu"
-              className="-mr-1 -mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-cream/60 transition-colors hover:border-cream/30 hover:text-cream"
+              className="-mr-1 -mt-1 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 text-cream/60 transition-colors hover:border-cream/30 hover:text-cream"
             >
               <CloseIcon />
             </button>
@@ -251,7 +298,7 @@ export function MenuModal() {
                   aria-label={item.name}
                   data-cursor="hover"
                   className={cn(
-                    'grid h-8 w-8 place-items-center rounded-full border transition-all',
+                    'grid h-11 w-11 place-items-center rounded-full border transition-all',
                     item.key === variant.key
                       ? 'border-cream/60'
                       : 'border-white/10 hover:border-white/30',
@@ -280,7 +327,8 @@ export function MenuModal() {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

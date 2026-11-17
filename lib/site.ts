@@ -141,6 +141,8 @@ export const primaryOutlet = outlets[0];
 export const site = {
   name: 'Roti Bakar Hersha',
   shortName: 'Hersha',
+  /** Domain produksi — dipakai metadata, canonical, sitemap, dan JSON-LD. */
+  url: 'https://rotibakarhersha.com',
   tagline: 'Roti bakar artisan, empuk ginuk ginuk, dipanggang di atas bara.',
   descriptor: 'Roti Bakar Empuk Ginuk Ginuk',
   description:

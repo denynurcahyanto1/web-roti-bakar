@@ -31,6 +31,7 @@ const satisfy = Satisfy({
 const title = 'Roti Bakar Hersha — Empuk Ginuk Ginuk, Dipanggang di Atas Bara';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
   title: {
     default: title,
     template: '%s · Roti Bakar Hersha',
@@ -49,18 +50,30 @@ export const metadata: Metadata = {
   applicationName: site.name,
   authors: [{ name: site.name }],
   creator: site.name,
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'id_ID',
     siteName: site.name,
     title,
     description: site.description,
-    url: 'https://rotibakarhersha.com',
+    url: site.url,
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Roti Bakar Hersha — Roti Bakar Empuk Ginuk Ginuk',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title,
     description: site.description,
+    images: ['/og.png'],
   },
   robots: { index: true, follow: true },
 };
@@ -78,7 +91,8 @@ const jsonLd = {
   servesCuisine: ['Indonesian', 'Dessert', 'Toast'],
   priceRange: 'Rp 20.000 – Rp 30.000',
   telephone: site.whatsapp.display,
-  url: 'https://rotibakarhersha.com',
+  url: site.url,
+  image: `${site.url}/og.png`,
   address: {
     '@type': 'PostalAddress',
     streetAddress: `${site.address.line1}, ${site.address.line2}`,
@@ -95,9 +109,12 @@ const jsonLd = {
     longitude: site.geo.lng,
   },
   sameAs: [site.instagram.link, site.gofood.link],
-  openingHoursSpecification: site.hours.map((row) => ({
+  openingHoursSpecification: site.hours.map((row, index) => ({
     '@type': 'OpeningHoursSpecification',
-    dayOfWeek: row.day,
+    // Schema.org memakai nama hari bahasa Inggris; nama Indonesia tidak dikenali crawler.
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][
+      index
+    ],
     opens: row.open.replace('.', ':'),
     closes: row.close === '24.00' ? '23:59' : row.close.replace('.', ':'),
   })),

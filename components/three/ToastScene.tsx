@@ -43,7 +43,7 @@ export default function ToastScene({
   className,
 }: ToastSceneProps) {
   return (
-    <div className={className} style={{ position: 'absolute', inset: 0 }}>
+    <div className={['toast-canvas', className].filter(Boolean).join(' ')} style={{ position: 'absolute', inset: 0 }}>
       <Canvas
         dpr={[1, 1.75]}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}

@@ -46,12 +46,19 @@ export function LocationSection() {
     site.outlets.find((outlet) => outlet.id === activeId) ?? site.outlets[0];
 
   useEffect(() => {
-    setTodayIndex(getTodayIndex());
-    setStatus(
-      activeOutlet.status === 'coming-soon'
-        ? 'soon'
-        : getOpeningState(activeOutlet.hours),
-    );
+    const sync = () => {
+      setTodayIndex(getTodayIndex());
+      setStatus(
+        activeOutlet.status === 'coming-soon'
+          ? 'soon'
+          : getOpeningState(activeOutlet.hours),
+      );
+    };
+
+    sync();
+    // Status buka/tutup ikut berubah tanpa perlu reload saat jam berganti.
+    const timer = window.setInterval(sync, 60_000);
+    return () => window.clearInterval(timer);
   }, [activeOutlet]);
 
   const statusMeta = STATUS[status];
@@ -75,7 +82,7 @@ export function LocationSection() {
           <Reveal delay={0.1}>
             <div
               className={cn(
-                'flex items-center gap-2.5 rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]',
+                'inline-flex w-fit items-center gap-2.5 rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]',
                 statusMeta.pill,
               )}
             >
@@ -87,7 +94,7 @@ export function LocationSection() {
 
         {/* Pemilih outlet */}
         <Reveal delay={0.06}>
-          <div className="no-scrollbar -mx-[var(--gutter)] mt-10 flex gap-2 overflow-x-auto px-[var(--gutter)] pb-1 md:mx-0 md:flex-wrap md:px-0">
+          <div className="no-scrollbar edge-fade-x-mobile -mx-[var(--gutter)] mt-10 flex gap-2 overflow-x-auto px-[var(--gutter)] pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
             {site.outlets.map((outlet) => {
               const isActive = outlet.id === activeOutlet.id;
               return (
@@ -98,7 +105,7 @@ export function LocationSection() {
                   aria-pressed={isActive}
                   data-cursor="hover"
                   className={cn(
-                    'flex shrink-0 items-center gap-2.5 rounded-full border px-4 py-2.5 transition-colors duration-300',
+                    'flex min-h-11 shrink-0 items-center gap-2.5 rounded-full border px-4 py-2.5 transition-colors duration-300',
                     isActive
                       ? 'border-cheese/40 bg-cheese/[0.1] text-cream'
                       : 'border-white/10 bg-white/[0.02] text-cream-dim/60 hover:border-white/20 hover:text-cream',
@@ -107,7 +114,7 @@ export function LocationSection() {
                   <span
                     className={cn(
                       'h-1.5 w-1.5 rounded-full',
-                      outlet.status === 'open' ? 'bg-emerald-400' : 'bg-cheese/45',
+                      outlet.status === 'open' ? 'bg-cheese/50' : 'bg-white/20',
                     )}
                   />
                   <span className="text-[12px] font-medium">{outlet.name}</span>
@@ -249,7 +256,7 @@ export function LocationSection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-cursor="hover"
-                className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-cream px-4 py-2.5 text-[11px] font-semibold text-ink shadow-lg transition-colors hover:bg-white"
+                className="absolute right-4 top-4 flex min-h-11 items-center gap-2 rounded-full bg-cream px-4 py-2.5 text-[11px] font-semibold text-ink shadow-lg transition-colors hover:bg-white"
               >
                 Rute perjalanan
                 <ArrowUpRight />
@@ -344,7 +351,7 @@ function MapEmbed({ outlet }: { outlet: Outlet }) {
           )}
           style={{
             border: 0,
-            filter: 'grayscale(0.35) sepia(0.18) saturate(0.75) brightness(0.82) contrast(1.05)',
+            filter: 'grayscale(0.2) sepia(0.2) saturate(0.85) brightness(0.88) contrast(1.02)',
           }}
         />
       )}
